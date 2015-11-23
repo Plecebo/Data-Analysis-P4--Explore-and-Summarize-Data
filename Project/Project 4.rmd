@@ -1,0 +1,114 @@
+---
+title: "Project 4"
+author: "Larry Schwerzler"
+date: "November 21, 2015"
+output: html_document
+---
+# Introduction
+For this project I chose to work witht he 2016 presidential campaign finance data, I am very much interested in the link between candidates and campagin finance and would like to see big money out of politics for various reasons. This gives me a personal interest in the data, which will hopefully help me to find real insight in what I'm looking at. 
+
+# Front matter
+I obtained the data from the FEC.gov website here: http://fec.gov/disclosurep/pnational.do on November 21, 2015.  I downloaded the entire dataset, in order to give me the most data to work with. My intent is to subset this data into smaller more workable sets. I downloaded the file and put the csv in the same folder as my .rmd file for ease of access. I named the file 2016Presidential_Election_Contributions.csv for clarity. 
+
+# Getting familiar with the data
+This is a big dataset and the first step is to figure out what all is contained in it. 
+
+```{r}
+#ec <- read.csv('2016Presidential_Election_Contributions.csv') # gave errors
+ec <- read.csv('2016Presidential_Election_Contributions.csv', row.names = NULL)
+colnames(ec) <- c(colnames(ec)[-1],"x")
+ec$x <- NULL
+```
+Right away I ran into an issue, I got an error message telling me duplicate row.names are not allowed. A quick google search brought me to this page: http://stackoverflow.com/questions/13239639/duplicate-row-names-error-reading-table-row-names-null-shifts-columns which lead me to formatting the read.csv command as above in the uncommented section as well as adding the two subsequent lines to shift the column names and remove the last column. 
+
+## Data Set Statistics
+After loading the dataset we can see there are 384,885 observations of 18 variables. 15 of the variables were identified at import as factors 1 contained chr data, 1 contained num data, 1 contained int data. 
+Here are the variables: 
+```{r}
+names(ec)
+```
+Of particular interest are:
+* cand_*- which seem to correspond to the candidate recieving the donations
+* contbr_*- which seem to correspond to the particular contributor 
+* contb_* which seems to correspond the the actual contribution
+* election_tp which looks at first glace to be an idiciation for which election the contribution is for
+
+Here are the list of all 21 candidates:
+```{r}
+unique(ec$cand_nm)
+```
+No surprises here, and some basic statistics about the contribution amounts: 
+```{r}
+summary(ec$contb_receipt_amt)
+```
+Some surprising things here: 
+* min contributions are negative, indicating this includes refunds to candidates
+* the max is almost $87k, which right away to me indicated this was only for personal contributions to candidates. A quick dig on the FEC.gov site and that was confirmed, this information is just for those contributing directly to the candidates, it doesn not include contributions by companies or PAC groups. A disapointment, as I'd love to see similar stats for the PAC groups, but this is a great dataset to dip my toe into the water with.  
+* a large difference between the mean and median
+
+## Let's add some stuff
+Right off the batt I know I will want to add Part (Dem/Rep/Ind) as well as Gender (M/F) to my data, so lets do that right away. 
+```{r}
+female_candidates <- c('Clinton, Hillary Rodham', 'Fiorina, Carly')
+democratic_candidates <- c('Clinton, Hillary Rodham','Sanders, Bernard', "O'Malley, Martin Joseph","Webb, James Henry Jr.", "Lessig, Lawrence")
+ec$gender <- ifelse(ec$cand_nm %in% female_candidates, 'Female', 'Male')
+ec$party <- ifelse(ec$cand_nm %in% democratic_candidates, 'Democrat', 'Republican')
+```
+
+That is better, honestly I'm somewhat surprised this wasn't included in the dataset. 
+## First look at the data
+
+I am chomping at the bit to see what this data looks like, and one of the main factors is the contribution amounts. 
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+ggplot(aes(x=contb_receipt_amt), data = ec) + geom_histogram(binwidth=100) 
+
+```
+This is a bit crazy, the chart shows, what the summary staistics indicated, that the data is a bit spread out. 
+
+Lets try to filter things down a bit. 
+```{r}
+ggplot(aes(x=contb_receipt_amt), data = subset(ec, contb_receipt_amt > 0)) + 
+  geom_histogram(binwidth=50) + xlim(0,quantile(ec$contb_receipt_amt, .9))
+```
+Now this is better. Here we are looking just at contributions > 0 and under the 90% statistic for donations. You can also see, clearly that the most contricutions come in the first few hundred dollars, with some notable spikes around $500 and $1000. 
+
+I wonder if the same is true of returned contributions?
+```{r}
+ggplot(aes(x=contb_receipt_amt), data = subset(ec, contb_receipt_amt < 0)) + 
+  geom_histogram(binwidth=50) + xlim(-5000,0)
+```
+Interesting that the negative contributions have a different shape to the histogram thent he positive contributions. I wonder why there is such a huge spike of negative contributions around -$2,700. Very curious. 
+
+How about contributions  by candidate? 
+```{r}
+ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", fun.y = sum) 
+```
+This is difficlt to read because of the names of the candidates being so long, it is hard to tell which corresponds to which. 
+```{r}
+ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", fun.y = sum) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+Alright! Easy to see now that Clinton has recieved the bulk of donations in terms of sheer dollars, followed by Bush, Cruz, Carson, Rubio, and Sanders in that order. Well that is total dollar contributions, way to go Hillary!, what about average contribution amount? 
+```{r}
+ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", fun.y = mean) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+Oh a much more even playing field. Here Jindal jumps to the top of the charts, pulling in nearly 2k on average per donation, that isn't nothing. Followed closely by Christi, Bush and Pitaki. Interesting to me are the people at the bottom of this list. If a candidate has small contributions, but has raised a lot of money we can assume that lots of people are behind them, which for any politician is a good thing. Candidates in this camp are notably Sanders and Carson, with Cruz and Paul close behind. 
+
+Let's take a look at number of contributions then. 
+```{r}
+library(plyr)
+ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", count) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+count(ec$contb_receipt_amt, ec$cand_nm)
+```
+
+
+
+
+
+
+
+
+
+

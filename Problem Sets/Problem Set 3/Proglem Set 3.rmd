@@ -1,0 +1,288 @@
+---
+title: "Problem Set 3"
+author: "Larry Schwerzler"
+date: "November 21, 2015"
+output: html_document
+---
+
+# 3.1 Diamonds
+
+Load the Diamonds dataset in Rstudio.
+
+```{r}
+library(ggplot2)
+data(diamonds)
+summary(diamonds)
+```
+
+How many observations are in the dataset?
+53940
+How man variables are in the dataset?
+10
+How many ordered factors are in the dataset?
+3
+
+```{r}
+?diamonds
+```
+What leter represents the best color for a diamond? 
+D
+
+# 3.2 Price Histogram
+Create a histogram of the price of all the diamonds in the diamond data set.
+
+```{r}
+qplot(x = price, data = diamonds)
+```
+
+# 3.3 Price Histogram Summary
+Describe the shape and center of the price distribution include summary statistics like the mean and median.
+
+```{r}
+summary(diamonds$price)
+```
+
+The shape of the distribution is right skewed in the price histogram. Its mean is 3933 and the median is 2401.
+
+# 3.4 Diamond Counts
+How many diamonds cost less then $500?
+```{r}
+sum(diamonds$price < 500)
+```
+1729
+
+How many diamonds cost less then $250?
+```{r}
+sum(diamonds$price < 250)
+```
+0
+
+How many diamonds cost $15,000 or more?
+```{r}
+sum(diamonds$price >= 15000)
+```
+1656
+
+# 3.5 Cheaper Diamonds
+Explore the largest peak in the price histogram you created earlier.
+
+Try limiting the x-axis, altering the bin width, and setting different breaks on the x-axis.
+
+There won't be a solution video for this question so go to the discussions to share your thoughts and discover what other people find.
+
+You can save images by using the ggsave() command. ggsave() will save the last plot created. For example...
+
+qplot(x = price, data = diamonds)
+ggsave('priceHistogram.png')
+
+ggsave currently recognises the extensions eps/ps, tex (pictex),pdf, jpeg, tiff, png, bmp, svg and wmf (windows only).
+```{r}
+qplot(x = price, data = diamonds, binwidth = 1) + 
+  scale_x_continuous(limits=c(600,700),breaks=seq(600,700,5) )
+```
+
+# 3.6 Price by cut histograms
+Break out the histogram of diamond prices by cut.
+
+You should have five histograms in separate panels on your resulting plot.
+```{r}
+qplot(x = price, data = diamonds, binwidth = 100) +
+  facet_wrap(~cut)
+```
+
+# 3.7 Price by cut
+Answer the questions below, check more than one option if there are ties
+
+Which cut has the highest priced diamond?
+```{r}
+by(diamonds$price, diamonds$cut, max)
+```
+Premium
+
+Which cut has the lowest priced diamond?
+```{r}
+by(diamonds$price, diamonds$cut, min)
+```
+Premium, Ideal
+
+Which cut has the lowest median price?
+```{r}
+by(diamonds$price, diamonds$cut, median)
+```
+Ideal
+
+# 3.8 Scales and multiple histograms
+In the two last exercises, we looked at the distribution for diamonds by cut.
+
+Run the code below in R Studio to generate the histogram as a reminder.
+```{r}
+qplot(x = price, data = diamonds) + facet_wrap(~cut)
+```                                                                         
+
+In the last exercise, we looked at the summary statistics for diamond price by cut. If we look at the output table, the the median and quartiles are reasonably close to each other.
+
+diamonds$cut: Fair
+  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   337    2050    3282    4359    5206   18570 
+------------------------------------------------------------------------ 
+diamonds$cut: Good
+  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   327    1145    3050    3929    5028   18790 
+------------------------------------------------------------------------ 
+diamonds$cut: Very Good
+  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   336     912    2648    3982    5373   18820 
+------------------------------------------------------------------------ 
+diamonds$cut: Premium
+  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   326    1046    3185    4584    6296   18820 
+------------------------------------------------------------------------ 
+diamonds$cut: Ideal
+  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   326     878    1810    3458    4678   18810 
+
+This means the distributions should be somewhat similar, but the histograms we created don't show that.
+
+The 'Fair' and 'Good' diamonds appear to have  different distributions compared to the better cut diamonds. They seem somewhat uniform on the left with long tails on the right.
+
+Let's look in to this more.
+
+Look up the documentation for facet_wrap in R Studio. Then, scroll back up and add a parameter to facet_wrap so that the y-axis in the histograms is not fixed. You want the y-axis to be different for each histogram.
+```{r}
+qplot(x = price, data = diamonds) + facet_wrap(~cut, scales = "free_y")
+``` 
+
+# 3.9 Price per carat by cut
+Create a histogram of price per carat and facet it by cut. You can make adjustments to the code from the previous exercise to get started.
+
+Adjust the bin width and transform the scale of the x-axis using log10.
+
+```{r}
+qplot(x = price/carat, data = diamonds, binwidth=.01) + 
+  facet_wrap(~cut) +
+  scale_x_log10()
+```
+
+# 3.10 Price box plots
+Investigate the price of diamonds using box plots, numerical summaries, and one of the following categorical variables: cut, clarity, or color.
+
+There won't be a solution video for this exercise so go to the discussion thread for either BOXPLOTS BY CLARITY, BOXPLOT BY COLOR, or BOXPLOTS BY CUT to share you thoughts and to see what other people found.
+
+```{r}
+qplot(x = color,  y = price, data=diamonds, geom="boxplot")
+by(diamonds$price, diamonds$color, summary)
+```
+
+# 3.11 Interquartile Range - IQR
+What is the price range for the middle 50% of diamonds with color D?
+```{r}
+by(diamonds$price, diamonds$color, summary)
+```
+25%: 911 75%: 4214 
+What is the price range for the middle 50% of diamonds with color J?
+25%: 1860 75%: 7695
+
+What is the IQR for diamonds with the best color?
+```{r}
+IQR(subset(diamonds, color== 'D' )$price)
+```
+3302.5
+
+What is the IQR for diamonds with the worst color?
+```{r}
+IQR(subset(diamonds, color== 'J' )$price)
+```
+5834.5
+
+# 3.12 Price per Carat Box Plots by Color
+Investigate the price per carat of diamonds across the different colors of diamonds using boxplots.
+
+Go to the discussions to share your thoughts and to discover what other people found.
+```{r}
+qplot(x = color,  y = price/carat, data=diamonds, geom="boxplot")
+```
+
+# 3.13 Carat Frequency Polygon
+Investigate the weight of the diamonds (carat) using a frequency polygon. Use different bin widths to see how the frequency polygon changes. What carat size has a count greater than 2000? 
+
+```{r}
+qplot(x=carat, data=diamonds, geom="freqpoly", binwidth=0.1) + scale_x_continuous(limit =c(0.0,1.0),breaks=seq(0,1,0.1))
+qplot(x=carat, data=diamonds, geom="freqpoly", binwidth=0.01) + scale_x_continuous(limit =c(1.0,1.2),breaks=seq(1.0,1.02,0.01))
+qplot(x=carat, data=diamonds, geom="freqpoly", binwidth=0.1) + scale_x_continuous(limit =c(1.5,1.9),breaks=seq(1.5,1.9,0.1))
+qplot(x=carat, data=diamonds, geom="freqpoly", binwidth=0.5) + scale_x_continuous(limit =c(1.5,6.0),breaks=seq(1.5,6.0,0.5))
+with(diamonds, table(carat)[table(carat) > 2000])
+```
+.3 and .8
+
+# 3.14 Data Wrangling with R
+Data munging or data wrangling can take up much of a data scientist's or data analyst's time. There are two R packages that make these tasks easier in R: tidyr and dplyr.
+
+tidyr -a package that reshapes the layout of your data
+
+dplyr - a package that helps you transform tidy, tabular data
+
+Review Data Wrangling in R (https://s3.amazonaws.com/udacity-hosted-downloads/ud651/DataWranglingWithR.pdf) to get a sense of how these packages allow you to manipulate data. You can use these packages to help you in the next programming task and in your future investigations.
+
+You may also download this useful Data Wrangling Cheat Sheet(http://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf). There are some other useful cheat sheets at RStudio (http://www.rstudio.com/resources/cheatsheets/).
+
+# 3.15 Gapminder Data
+The Gapminder website contains over 500 data sets with information about the world's population. Your task is to download a data set of your choice and create 2-5 plots that make use of the techniques from Lesson 3.
+
+You might use a simple histogram, a boxplot split over a categorical variable, or a frequency polygon. The choice is yours!
+```{r}
+library(tidyr)
+library(dplyr)
+gm <- read.csv('mc RTI age adjusted indicator file 20100906.csv', check.names = F)
+tm <- gm %>% gather(year,dp100k,`1985`:`2008`)
+qplot(x=dp100k , data = tm) + facet_wrap(~year)
+
+```
+
+# 3.16
+Your task is to investigate the distribution of your friends' birth months and days.
+
+Here some questions you could answer, and we hope you think of others.
+
+How many people share your birthday? Do you know them? (Reserve time with them or save money to buy them a gift!)
+
+Which month contains the most number of birthdays?
+
+How many birthdays are in each month?
+
+Which day of the year has the most number of birthdays?
+
+Do you have at least 365 friends that have birthdays on everyday of the year?
+
+You will need to do some data munging and additional research to complete this task. This task won't be easy, and you may encounter some unexpected challenges along the way. We hope you learn a lot from it though.
+
+You can expect to spend 30 min or more on this task depending if you use the provided data or obtain your personal data. We also encourage you to use the lubridate package for working with dates. Read over the documentation in RStudio and search for examples online if you need help.
+
+You'll need to export your Facebooks friends' birthdays to a csv file. You may need to create a calendar of your Facebook friends' birthdays in a program like Outlook or Gmail and then export the calendar as a csv file.
+
+Once you load the data into R Studio, you can use the strptime() function to extract the birth months and birth days. We recommend looking up the documentation for the function and finding examples online.
+
+We've included some links in the Instructor Notes to help get you started.
+
+Once you've completed your investigation, create a post in the discussions that includes:
+1. any questions you answered, your observations, and summary statistics
+2. snippets of code that created the plots
+3. links to the images of your plots
+
+
+```{r}
+library
+cb <- read.csv('cc.csv')
+cb$Birthday <- as.Date(format(as.Date(cb$Birthday, "%m/%d/%y"), "%m/%d/19%y"), "%m/%d")
+qplot(x = Birthday, data = subset(cb, format(cb$Birthday, '%m') == '09'), bin=1) + scale_x_date()
+qplot(x = Birthday, data = cb, bin=30) + scale_x_date(breaks = date_breaks("months"),labels = date_format("%b"))
+qplot(x = Birthday, data = cb, bin=1) + scale_x_date(breaks = date_breaks("days"),labels = date_format("%j"))
+
+```
+How many people share your birthday? Do you know them? (Reserve time with them or save money to buy them a gift!) No one :(
+
+Which month contains the most number of birthdays?
+July
+
+Which is the number of birthdays on the most popular day?
+5
+Do you have at least 365 friends that have birthdays on everyday of the year? no
