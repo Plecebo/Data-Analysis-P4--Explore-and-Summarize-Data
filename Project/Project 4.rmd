@@ -10,6 +10,14 @@ For this project I chose to work witht he 2016 presidential campaign finance dat
 # Front matter
 I obtained the data from the FEC.gov website here: http://fec.gov/disclosurep/pnational.do on November 21, 2015.  I downloaded the entire dataset, in order to give me the most data to work with. My intent is to subset this data into smaller more workable sets. I downloaded the file and put the csv in the same folder as my .rmd file for ease of access. I named the file 2016Presidential_Election_Contributions.csv for clarity. 
 
+Let's load some libraries into R that I will make use of through this analysis. 
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+
 # Getting familiar with the data
 This is a big dataset and the first step is to figure out what all is contained in it. 
 
@@ -60,11 +68,7 @@ That is better, honestly I'm somewhat surprised this wasn't included in the data
 
 I am chomping at the bit to see what this data looks like, and one of the main factors is the contribution amounts. 
 ```{r}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
 ggplot(aes(x=contb_receipt_amt), data = ec) + geom_histogram(binwidth=100) 
-
 ```
 This is a bit crazy, the chart shows, what the summary staistics indicated, that the data is a bit spread out. 
 
@@ -84,27 +88,104 @@ Interesting that the negative contributions have a different shape to the histog
 
 How about contributions  by candidate? 
 ```{r}
-ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", fun.y = sum) 
+ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + 
+  geom_bar(stat="summary", fun.y = sum) 
 ```
 This is difficlt to read because of the names of the candidates being so long, it is hard to tell which corresponds to which. 
 ```{r}
-ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", fun.y = sum) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + 
+  geom_bar(stat="summary", fun.y = sum) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 Alright! Easy to see now that Clinton has recieved the bulk of donations in terms of sheer dollars, followed by Bush, Cruz, Carson, Rubio, and Sanders in that order. Well that is total dollar contributions, way to go Hillary!, what about average contribution amount? 
 ```{r}
-ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", fun.y = mean) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + 
+  geom_bar(stat="summary", fun.y = mean) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
-Oh a much more even playing field. Here Jindal jumps to the top of the charts, pulling in nearly 2k on average per donation, that isn't nothing. Followed closely by Christi, Bush and Pitaki. Interesting to me are the people at the bottom of this list. If a candidate has small contributions, but has raised a lot of money we can assume that lots of people are behind them, which for any politician is a good thing. Candidates in this camp are notably Sanders and Carson, with Cruz and Paul close behind. 
+Oh a much more even playing field. Here Jindal jumps to the top of the charts, pulling in nearly 2k on average per donation, that seems like a lot per donation. He is Followed closely by Christi, Bush and Pitaki. Interesting to me are the people at the bottom of this list. If a candidate has small average contributions, but has raised a lot of money we can assume that lots of people are donating, which for any politician is a good thing. Candidates in this camp are notably Sanders and Carson, with Cruz and Paul close behind. 
 
 Let's take a look at number of contributions then. 
 ```{r}
-library(plyr)
-ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + geom_bar(stat="summary", count) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-count(ec$contb_receipt_amt, ec$cand_nm)
+ggplot(aes(x=cand_nm), data=ec) + 
+  geom_histogram(binwidth=1)+ 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+Interesting to see here that Clinton again is the leader in the sheer number of contributions. The next 3 highest in number of contributors are Carson, Sanders, and Cruz. This group dominates the rest of the candidates in sheer number of contributions. 
+
+What about Democrats vs. Republicans? Who has raised more money? 
+```{r}
+ggplot(aes(x=party, y=contb_receipt_amt/1000000), data=ec) + 
+  geom_bar(stat="summary", fun.y = sum) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+This is in millions of dollars. So Dems are just under $75M and looks like Republicans are around $93M. 
+
+Who overall is getting more money per donation? My guess would be demograts, since Clinton has been at the top of those charts and there are so fewer Dems to republicans. 
+```{r}
+ggplot(aes(x=party, y=contb_receipt_amt), data=ec) + 
+  geom_bar(stat="summary", fun.y = mean) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+My guess was right but not by as much as I would have expected.
+
+What about over time donations?
+```{r}
+ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), data=ec) +
+  geom_line(aes(color=cand_nm), stat="summary", fun.y= sum)
+```
+oops that didn't give at all what I expected. I wonder if the receipt needs to be converted into a date? 
+```{r}
+ec$contb_receipt_dt <- as.Date(ec$contb_receipt_dt, "%d-%b-%y")
+```
+There we go all date like. Let's try the plot again. 
+```{r}
+ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), data=ec) +
+  geom_area(aes(color=cand_nm), stat="summary", fun.y= sum)
+```
+Much better, but too much information, let's just look at since March of 2015
+```{r}
+ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), 
+       data= subset(ec, contb_receipt_dt >= as.Date("2015-03-01"))) +
+  geom_area(aes(color=cand_nm), stat="summary", fun.y= sum)
+```
+This is better, but I think the graph just doesn't quite look right, it doesn't make sense that the total dollars would fluctuate up and down like that I think this isn't showing a proper cumulative summary like i was expecting, but a sum of each candidates donations on each date. 
+
+I had a really hard time coming up with the right way to do this just using ggplot, in the end I created another dataframe and grouped the data by candidate,and date and summed the contributions on that date, then cumulatively summed them, then used that dataframe in the ggplot viola! Credit to this site for helping me break through that challenge. http://www.markhneedham.com/blog/2014/08/31/r-ggplot-cumulative-frequency-graphs/ I tried lots of stuff, but this was the one that helped me get on the right path. 
+```{r}
+ec.day_group <- ec %>% group_by(party, cand_nm, contb_receipt_dt) %>% summarize(daily_contributions = sum(contb_receipt_amt), n = n()) %>% mutate(daily_contributions = cumsum(daily_contributions), n = cumsum(n)) 
+ggplot(aes(x=contb_receipt_dt, y=daily_contributions/100000), 
+       data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
+  geom_line(aes(color=cand_nm))
+```
+Look at Hillary shoot up, wow!
+What about dems vs republicans, lets add a facet
+```{r}
+ggplot(aes(x=contb_receipt_dt, y=daily_contributions/100000), 
+       data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
+  geom_line(aes(color=cand_nm)) + facet_wrap(~party)
+```
+Man the Republican contributions are much more competitive, the dems are dominated by Clinton. 
+
+What about the same breakdown but for number of donations total? 
+```{r}
+ggplot(aes(x=contb_receipt_dt, y=n), 
+       data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
+  geom_line(aes(color=cand_nm)) + facet_wrap(~party)
+```
+Two big superstars from each group here. Clinton & Sanders, and Cruz, Carson. 
+
+Let's take a look at how the debates impacted donations. 
 
 
 
+
+
+# Final Plots and Summary
+You will select three plots from your analysis to polish and share in this section. The three plots should show different trends and should be polished with appropriate labels, units, and titles (see the Project Rubric for more information).
+
+# Reflection
+This should contain a few sentences about your struggles, successes, and ideas for future exploration on the data set (see the Project Rubric for more information).
 
 
 
