@@ -163,14 +163,14 @@ ggplot(aes(x=party, y=contb_receipt_amt), data=ec) +
 
 My guess was right but not by as much as I would have expected.
 
-What about over time donations?
+What about donations over time?
 
 ```{r}
 ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), data=ec) +
   geom_line(aes(color=cand_nm), stat="summary", fun.y= sum)
 ```
 
-Oops that didn't give at all what I expected. I wonder if the receipt needs to be converted into a date? 
+Oops that didn't give at all what I expected. I wonder if the contb_receipt_dt field needs to be converted into a date? 
 
 ```{r}
 
@@ -184,7 +184,16 @@ ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), data=ec) +
   geom_area(aes(color=cand_nm), stat="summary", fun.y= sum)
 ```
 
-Much better, but too much information, let's just look at since March of 2015.
+Much better, but too much information. Let's see what our date bounds are. 
+```{r}
+min(ec$contb_receipt_dt)
+max(ec$contb_receipt_dt)
+```
+
+Looks like this dataset only goes through to September 30th, 2015 and starts with contributions all the way back to 2013. 
+
+Let's just look at since March of 2015.
+
 
 ```{r}
 ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), 
@@ -192,7 +201,7 @@ ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt),
   geom_area(aes(color=cand_nm), stat="summary", fun.y= sum)
 ```
 
-This is better, but I think the graph just doesn't quite look right, it doesn't make sense that the total dollars would fluctuate up and down like that I think this isn't showing a proper cumulative summary like i was expecting, but a sum of each candidates donations on each date. 
+This is better, but I think the graph just doesn't quite look right, it doesn't make sense that the total dollars would fluctuate up and down like that I think this isn't showing a proper cumulative summary like I was expecting, but a sum of each candidates donations on each date. 
 
 I had a really hard time coming up with the right way to do this just using ggplot, in the end I created another dataframe and grouped the data by candidate,and date and summed the contributions on that date, then cumulatively summed them, then used that dataframe in the ggplot viola! Credit to this site for helping me break through that challenge. http://www.markhneedham.com/blog/2014/08/31/r-ggplot-cumulative-frequency-graphs/ I tried lots of stuff, but this was the one that helped me get on the right path. 
 
@@ -209,22 +218,51 @@ What about dems vs republicans, lets add a facet
 ```{r}
 ggplot(aes(x=contb_receipt_dt, y=daily_contributions/100000), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
-  geom_line(aes(color=cand_nm)) + facet_wrap(~party)
+  geom_line(aes(color=cand_nm)) + 
+  facet_wrap(~party)
 ```
 
-Man the Republican contributions are much more competitive, the dems are dominated by Clinton. 
+Man the Republican contributions are much more competitive within the party, the dems are dominated by Clinton. 
 
 What about the same breakdown but for number of donations total? 
 
 ```{r}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
-  geom_line(aes(color=cand_nm)) + facet_wrap(~party)
+  geom_line(aes(color=cand_nm)) + 
+  facet_wrap(~party)
 ```
 
 Two big superstars from each group here. Clinton/Sanders, and Cruz/Carson. 
 
-Let's take a look at how the debates impacted donations. 
+Let's take a look at how the debates impacted number of donations to the candidates. 
+
+```{r}
+ggplot(aes(x=contb_receipt_dt, y=n), 
+       data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-08-01"))) +
+  geom_line(aes(color=cand_nm)) +
+  geom_vline(xintercept = as.numeric(as.Date("2015-08-06")), colour = "red")+
+  geom_vline(xintercept = as.numeric(as.Date("2015-09-16")), colour = "red")
+```
+
+Since the dataset only goes through September 30, 2015 we can only include the two Republican debates that happened prior to this date, and none of the Democratic debates. 
+
+Let's focus on the republicans around the first debate on August 6, 2015
+
+```{r}
+ggplot(aes(x=contb_receipt_dt, y=n), 
+       data= subset(ec.day_group, 
+                    contb_receipt_dt >= as.Date("2015-07-15") &  
+                      contb_receipt_dt <= as.Date("2015-08-15") &
+                      party == 'Republican'
+                    )) +
+  geom_line(aes(color=cand_nm)) +
+  geom_vline(xintercept = as.numeric(as.Date("2015-08-06")), colour = "red")
+```
+
+
+
+
 
 # Final Plots and Summary
 You will select three plots from your analysis to polish and share in this section. The three plots should show different trends and should be polished with appropriate labels, units, and titles (see the Project Rubric for more information).
