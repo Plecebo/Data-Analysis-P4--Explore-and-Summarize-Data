@@ -16,7 +16,7 @@ I obtained the data from the FEC.gov website here: http://fec.gov/disclosurep/pn
 
 Let's load some libraries into R that I will make use of through this analysis. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -26,7 +26,7 @@ library(tidyr)
 
 This is a big data set and the first step is to figure out what all is contained in it. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 #ec <- read.csv('2016Presidential_Election_Contributions.csv') # gave errors
 ec <- read.csv('2016Presidential_Election_Contributions.csv', row.names = NULL)
 colnames(ec) <- c(colnames(ec)[-1],"x")
@@ -40,7 +40,7 @@ Right away I ran into an issue, I got an error message telling me duplicate row.
 After loading the data set we can see there are 3,269,914 observations of 18 variables. 15 of the variables were identified at import as factors 1 contained chr data, 1 contained num data, 1 contained int data.  
 Here are the variables: 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 names(ec)
 ```
 
@@ -53,13 +53,13 @@ Of particular interest are:
 
 Here are the list of all 24 candidates:
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 unique(ec$cand_nm)
 ```
 
 No surprises here, and some basic statistics about the contribution amounts: 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 summary(ec$contb_receipt_amt)
 ```
 
@@ -73,7 +73,7 @@ Some surprising things here:
 
 I know I will want to add Party (Dem/Rep/Green) as well as Gender (M/F/O) to my data, so lets do that right away. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 female_candidates <- c('Clinton, Hillary Rodham', 
                        'Fiorina, Carly', 
                        'Stein, Jill'
@@ -101,7 +101,7 @@ That is better, honestly I'm somewhat surprised this wasn't included in the data
 
 I am chomping at the bit to see what this data looks like, and one of the main factors is the contribution amounts. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_amt), data = ec) + geom_histogram(binwidth=100) 
 ```
 
@@ -109,7 +109,7 @@ This is pretty unreadable, the chart shows, what the summary statistics indicate
 
 Let's try to filter things down a bit. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_amt), data = subset(ec, contb_receipt_amt > 0)) + 
   geom_histogram(binwidth=50) + xlim(0,quantile(ec$contb_receipt_amt, .9))
 ```
@@ -118,7 +118,7 @@ Now this is better. Here we are looking just at contributions > 0 and under the 
 
 I wonder if the same is true of returned contributions?
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_amt), data = subset(ec, contb_receipt_amt < 0)) + 
   geom_histogram(binwidth=50) + xlim(-5000,0)
 ```
@@ -128,7 +128,7 @@ Interesting that the negative contributions have a different shape to the histog
 ## What about those high dollar and negative contributions? What are those about? 
 I had to find out so lets take a look at the top 10 negative dollar contributions
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 head(ec[order(ec$contb_receipt_amt),
         c("cand_nm",
           "contbr_nm", 
@@ -148,7 +148,7 @@ The top negative contribution was for an Ernie Boch who was refunded $84,236.80 
 
 What other contributions has Boch made? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 subset(ec[, c("cand_nm",
               "contbr_nm", 
               "contbr_employer", 
@@ -162,7 +162,7 @@ subset(ec[, c("cand_nm",
 ```
 
 One Donation for $86,936.80 and one refund for $84,236.80 which is a difference of 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 86936.80 - 84236.80
 ```
 
@@ -170,7 +170,7 @@ Which is the personal contribution limit for a person to give to a candidate. Ch
 
 That explains the biggest, what about the next? Using Similar research methods I discovered that Dr. Thomas Gocke donated $20,000 to Clinton on 6/29/2015 and as per the filing here: http://docquery.fec.gov/cgi-bin/fecimg/?201509039001609936 was refunded that money on 6/30/2015. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 subset(ec[, c("cand_nm",
               "contbr_nm", 
               "contbr_employer", 
@@ -185,7 +185,7 @@ subset(ec[, c("cand_nm",
 
 uh only one listed, strange. Maybe his name is listed differently someplace else?
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 subset(ec[, c("cand_nm",
               "contbr_nm", 
@@ -207,7 +207,7 @@ So it looks like those are explained pretty well, I will assume that those negat
 
 What about the BIG donations?
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 head(ec[order(-ec$contb_receipt_amt),
         c("cand_nm",
           "contbr_nm", 
@@ -221,7 +221,7 @@ head(ec[order(-ec$contb_receipt_amt),
 
 Some of these large contributions come from PAC groups. The largest 6 donations came from Hillary Victory Fund in the total of:
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 4904860.5 + 3686373.3 + 3600489.1 + 1797624.9 + 1603724.4 + 1467070.9
 ```
 
@@ -235,14 +235,14 @@ From what I can tell there doesn't seem to be a good way to identify the PAC vs 
 
 How about contributions  by candidate? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + 
   geom_bar(stat="summary", fun.y = sum) 
 ```
 
 This is difficult to read because of the names of the candidates being so long, it is hard to tell which corresponds to which. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + 
   geom_bar(stat="summary", fun.y = sum) + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -250,7 +250,7 @@ ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) +
 
 Alright! Easy to see now that Clinton has received the bulk of donations in terms of sheer dollars, followed by Sanders, then Cruz and Rubio in that order. Well that is total dollar contributions, way to go Hillary, what about average contribution amount? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=cand_nm, y=contb_receipt_amt), data=ec) + 
   geom_bar(stat="summary", fun.y = mean) + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -260,7 +260,7 @@ Oh a much more even playing field. Here Jindal jumps to the top of the charts, p
 
 Let's take a look at number of contributions then. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
  ggplot(aes(x=cand_nm), data=ec) + 
   stat_count(width = 1)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -270,7 +270,7 @@ If you have been watching the news it shouldn't be all that surprising to find S
 
 What about Democrats vs. Republicans vs Green? Who has raised more money
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=party, y=contb_receipt_amt/1000000), data=ec) + 
   geom_bar(stat="summary", fun.y = sum) + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -280,7 +280,7 @@ This is in millions of dollars. So Democrats are around $260M and looks like Rep
 
 Who overall is getting more money per donation? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=party, y=contb_receipt_amt), data=ec) + 
   geom_bar(stat="summary", fun.y = mean) + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -290,26 +290,26 @@ Looks like the Democrats are low here, possibly pulled down by Sanders large num
 
 What about donations over time?
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), data=ec) +
   geom_line(aes(color=cand_nm), stat="summary", fun.y= sum)
 ```
 
 Oops that didn't give at all what I expected. I wonder if the contb_receipt_dt field needs to be converted into a date? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ec$contb_receipt_dt <- as.Date(ec$contb_receipt_dt, "%d-%b-%y")
 ```
 
 There we go all date like. Let's try the plot again. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), data=ec) +
   geom_area(aes(color=cand_nm), stat="summary", fun.y= sum)
 ```
 
 Much better, but too much information. Let's see what our date bounds are. 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 min(ec$contb_receipt_dt)
 max(ec$contb_receipt_dt)
 ```
@@ -319,7 +319,7 @@ Looks like this data set goes through to April 30Th, 2016 and starts with contri
 Let's just look at since March of 2015.
 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=contb_receipt_amt), 
        data= subset(ec, contb_receipt_dt >= as.Date("2015-03-01"))) +
   geom_area(aes(color=cand_nm), stat="summary", fun.y= sum)
@@ -329,7 +329,7 @@ This is better, but I think the graph just doesn't quite look right, it doesn't 
 
 I had a really hard time coming up with the right way to do this just using ggplot, in the end I created another data frame and grouped the data by candidate,and date and summed the contributions on that date, then cumulatively summed them, then used that data frame in the ggplot viola! Credit to this site for helping me break through that challenge. http://www.markhneedham.com/blog/2014/08/31/r-ggplot-cumulative-frequency-graphs/ I tried lots of stuff, but this was the one that helped me get on the right path. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ec.day_group <- ec %>% group_by(party, 
                                 cand_nm, 
                                 contb_receipt_dt) %>% 
@@ -344,7 +344,7 @@ ggplot(aes(x=contb_receipt_dt, y=daily_contributions/100000),
 Look at Hillary shoot up, wow!
 
 What about number of donations? 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
   geom_line(aes(color=cand_nm))
@@ -352,7 +352,7 @@ ggplot(aes(x=contb_receipt_dt, y=n),
 
 What about Democrats vs republicans vs green, lets add a facet
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=daily_contributions/100000), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
   geom_line(aes(color=cand_nm)) + 
@@ -362,7 +362,7 @@ ggplot(aes(x=contb_receipt_dt, y=daily_contributions/100000),
 The Republican contributions are much more competitive within the party, while the Democrats are dominated by Clinton. 
 What about the same breakdown but for number of donations total? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
   geom_line(aes(color=cand_nm)) + 
@@ -375,7 +375,7 @@ Let's take a look at how the debates impacted number of donations to the candida
 
 My thinking being, did the debate have a significant impact on the minds of voters and where they are spending donations? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-08-01"))) +
   geom_line(aes(color=cand_nm)) +
@@ -410,7 +410,7 @@ I like this visualization but I don't think I see any strong indications that do
 
 What about the same information but for total dollars? 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=daily_contributions/100000), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-08-01"))) +
   geom_line(aes(color=cand_nm)) +
@@ -443,7 +443,7 @@ Again an interesting visualization but there doesn't seem to be any obvious link
 
 Let's focus on the Democrats around the last debate let's filter the data after 4/1/2016
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, 
                     contb_receipt_dt >= as.Date("2016-04-01") &
@@ -470,14 +470,14 @@ In selecting three plots I want to make sure that the end results are readable a
 ## Number of Contributions through the campaign
 
 Here is the chart from earlier in the analysis:
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
  ggplot(aes(x=cand_nm), data=ec) + 
   stat_count(width = 1)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
 First lets see about cleaning up the axis labels. 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
  ggplot(aes(x=cand_nm), data=ec) + 
   stat_count(width = 1)+
   ggtitle('Number of Donations by Candidate')+
@@ -488,7 +488,7 @@ First lets see about cleaning up the axis labels.
 Looking better already. Gave the chart a title and named the axis to make them more readable. I also changed the angle of the candidate names from 90 to 45 in order to save a bit of room on the screen.
 
 How about adding some color?
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
  ggplot(aes(x=cand_nm, fill=party), data=ec) + 
   stat_count(width = 1)+
   ggtitle('Number of Donations by Candidate')+
@@ -505,7 +505,7 @@ Color codes came from:
 * http://www.colourlovers.com/color/E91D0E/republican_red
 * http://www.correntewire.com/sites/default/files/GPUS_style_guide.pdf
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
  ggplot(aes(x=cand_nm, fill=party), data=ec) + 
   stat_count(width = 1)+
   scale_fill_manual(values=c("#232066", "#00A95C", "#E91D0E"))+
@@ -519,7 +519,7 @@ Looking much better so far. I see a few things left to change. The label on the 
 I struggled reformatting the y axis. This is the resource that helped me identify the use of a function to re-scale it:
 * http://stackoverflow.com/questions/4646020/ggplot2-axis-transformation-by-constant-factor 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
  ggplot(aes(x=cand_nm, fill=party), data=ec) + 
   stat_count(width = 1)+
   scale_fill_manual(values=c("#232066", "#00A95C", "#E91D0E"),name="Party")+
@@ -533,7 +533,7 @@ I like this. I'm going to call it complete.
 
 ### Final - Number of Contributions through the campaign
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
  ggplot(aes(x=cand_nm, fill=party), data=ec) + 
   stat_count(width = 1)+
   scale_fill_manual(values=c("#232066", "#00A95C", "#E91D0E"),name="Party")+
@@ -547,7 +547,7 @@ I like this. I'm going to call it complete.
 
 Here is the chart from earlier in the analysis: 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
   geom_line(aes(color=cand_nm))
@@ -555,7 +555,7 @@ ggplot(aes(x=contb_receipt_dt, y=n),
 
 Alright lets add some labels to these axis and legend.
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, contb_receipt_dt >= as.Date("2015-03-01"))) +
   ggtitle('Number of donations over time')+
@@ -566,7 +566,7 @@ ggplot(aes(x=contb_receipt_dt, y=n),
 
 There are way too many people in this race to really show detail. So I'll try and filter this down a bit more by making the date rage smaller and removing candidates that had dropped out of the race before the start of our new range.
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Create a list of candidates who were in the race on Jan 1, 2016
 candidates = c("O'Malley, Martin Joseph",
                "Clinton, Hillary Rodham",
@@ -596,7 +596,7 @@ ggplot(aes(x=contb_receipt_dt, y=n),
 
 Lets reduce the Y labels a bit, they are a little large: 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n/1000), 
        data= subset(ec.day_group, 
                     contb_receipt_dt >= as.Date("2016-01-01") & 
@@ -611,7 +611,7 @@ I like this, I'm going to call this one done!
 
 ### Final - Total Donations over time
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n/1000), 
        data= subset(ec.day_group, 
                     contb_receipt_dt >= as.Date("2016-01-01") & 
@@ -626,7 +626,7 @@ ggplot(aes(x=contb_receipt_dt, y=n/1000),
 
 Here is the chart from earlier in the analysis:
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n), 
        data= subset(ec.day_group, 
                     contb_receipt_dt >= as.Date("2016-04-01") &
@@ -640,7 +640,7 @@ As with the others, lets start with some labels. I decided that the line for O'M
 I found information on adding the labels to the chart instead of relying on he legend here: http://www.r-bloggers.com/directlabels-adding-direct-labels-to-ggplot2-and-lattice-plots/
 Also found some good info on the use of Annotate to add the label for the debate line: http://docs.ggplot2.org/0.9.3/annotate.html
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n/1000), 
        data= subset(ec.day_group, 
                     contb_receipt_dt >= as.Date("2016-04-01") &
@@ -679,7 +679,7 @@ ggplot(aes(x=contb_receipt_dt, y=n/1000),
 
 Let's remove the legend: http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/ since it is redundant at this point. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n/1000), 
        data= subset(ec.day_group, 
                     contb_receipt_dt >= as.Date("2016-04-01") &
@@ -725,7 +725,7 @@ This looks good to me, I'm going to call this final.
 
 ### Final - Contributions Around the latest Democratic Debate
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x=contb_receipt_dt, y=n/1000), 
        data= subset(ec.day_group, 
                     contb_receipt_dt >= as.Date("2016-04-01") &
