@@ -35,7 +35,7 @@ ec$x <- NULL
 
 Right away I ran into an issue, I got an error message telling me duplicate row.names are not allowed. A quick Google search brought me to this page: http://stackoverflow.com/questions/13239639/duplicate-row-names-error-reading-table-row-names-null-shifts-columns which lead me to formatting the read.csv command as above in the uncommented section as well as adding the two subsequent lines to shift the column names and remove the last column. 
 
-## Data Set Statistics
+## Data Set Statistisc
 
 After loading the data set we can see there are 3,269,914 observations of 18 variables. 15 of the variables were identified at import as factors 1 contained chr data, 1 contained num data, 1 contained int data.  
 Here are the variables: 
